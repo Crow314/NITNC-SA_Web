@@ -1,0 +1,53 @@
+/** Effective Block **/
+ul {
+    list-style: none;
+}
+
+/** Fixed Block **/
+body {
+    margin: 0;
+}
+
+header {
+    color: white;
+    background-color: rgba(34, 49, 52, 0.9);
+    height: 65px;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    z-index: 10;
+}
+
+.header-logo {
+    color: white;
+    font-size: 36px;
+    line-height: 65px;
+    float: left;
+    display: block;
+    margin: 0;
+    padding: 0 25px;
+}
+
+.header-list {
+    margin: 0;
+}
+
+.header-list li{
+    float: left;
+    transition: all 1s;
+}
+
+.header-list li:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.header-list a {
+    color: white;
+    line-height: 65px;
+    padding: 0 20px;
+    display: block;
+}
+
+.header-list a:hover {
+    text-decoration: none;
+}
