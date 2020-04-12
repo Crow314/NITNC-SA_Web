@@ -3,8 +3,5 @@
 
 /** Fixed Block **/
 #top-wrapper {
-    height: 500px;
-    margin: 65px 25px;
     padding-top: 20px;
-    padding-bottom: 80px;
 }

@@ -11,15 +11,26 @@ body {
 header {
     color: white;
     background-color: rgba(34, 49, 52, 0.9);
-    height: 65px;
     width: 100%;
     position: fixed;
     top: 0;
     z-index: 10;
 }
 
+#header-fixer {
+    margin-top: 100px;
+}
+
+.header-always {
+    height: 65px;
+}
+
+.header-accordion {
+    height: 35px;
+    display: none;
+}
+
 .header-logo {
-    color: white;
     font-size: 36px;
     line-height: 65px;
     float: left;
@@ -37,17 +48,24 @@ header {
     transition: all 1s;
 }
 
-.header-list li:hover {
+.header-list li:hover, .header-list-selected {
+    float: left;
     background-color: rgba(255, 255, 255, 0.3);
+    box-sizing: border-box;
+    box-shadow: inset 0 -5px 0 0 aqua;;
 }
 
-.header-list a {
-    color: white;
+.header-list p, .header-list a {
     line-height: 65px;
     padding: 0 20px;
+    margin: 0;
     display: block;
 }
 
 .header-list a:hover {
     text-decoration: none;
+}
+
+.header-accordion-contents {
+    margin-left: 180px;
 }
