@@ -26,7 +26,8 @@ header {
 }
 
 .header-accordion {
-    height: 35px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.1);
     display: none;
 }
 
@@ -39,12 +40,13 @@ header {
     padding: 0 25px;
 }
 
-.header-list {
+.header-list, .header-accordion-contents {
     margin: 0;
 }
 
 .header-list li{
     float: left;
+    cursor: pointer;
     transition: all 1s;
 }
 
@@ -66,6 +68,17 @@ header {
     text-decoration: none;
 }
 
-.header-accordion-contents {
-    margin-left: 180px;
+.header-accordion-list {
+    margin: 0;
+}
+
+.header-accordion-list li{
+    float: left;
+    padding: 0 10px;
+}
+
+.header-accordion-list p, .header-accordion-list a {
+    line-height: 40px;
+    margin: 0;
+    display: block;
 }
