@@ -17,6 +17,10 @@ header {
     z-index: 10;
 }
 
+header a:hover {
+    text-decoration: none;
+}
+
 #header-fixer {
     margin-top: 100px;
 }
@@ -64,20 +68,30 @@ header {
     display: block;
 }
 
-.header-list a:hover {
-    text-decoration: none;
-}
-
 .header-accordion-list {
     margin: 0;
 }
 
 .header-accordion-list li{
     float: left;
-    padding: 0 10px;
+    position: relative;
+    padding: 0 15px;
+}
+
+.header-accordion-list li:before {
+    content: "";
+    position: absolute;
+    top: 0.85em;
+    left: -0.1em;
+    width: 0;
+    height: 0;
+    border-width: 6px 0 6px 9px;
+    border-style: solid;
+    border-color: transparent transparent transparent white;
 }
 
 .header-accordion-list p, .header-accordion-list a {
+    color: white;
     line-height: 40px;
     margin: 0;
     display: block;
