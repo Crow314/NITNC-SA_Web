@@ -90,7 +90,7 @@ function totalAmountCalc() {
     const $totalAmountTD = $totalAmount.parent('td');
     const $minus = $totalAmountTD.children('.minus');
 
-    let totalAmount = 0;
+    let amountSum = new Map(); // taxRate: amount
     $rows.each(function (index, element) {
         const $amount = $(element).find('.amount');
         const $amountMinus = $amount.parent('td').children('.minus');
@@ -103,12 +103,21 @@ function totalAmountCalc() {
 
         const taxRate = parseInt($taxRate.val());
 
-        totalAmount += amount * (taxRate*0.01 + 1);
+        if(!amountSum.has(taxRate)) { // 同一税率初出時
+            amountSum.set(taxRate, 0);
+        }
+
+        amountSum.set(taxRate, amountSum.get(taxRate)+amount); // +=的な
+    });
+
+    let totalAmount = 0;
+    amountSum.forEach(function(amount, taxRate) { // value, key
+        totalAmount += Math.floor(amount*(taxRate*0.01 + 1));
     });
 
     if(totalAmount >= 0) { // 正数時
         // テキスト設定
-        $totalAmount.text(thousandSeparate(Math.floor(totalAmount)));
+        $totalAmount.text(thousandSeparate(totalAmount));
 
         // マイナス表示削除
         if(!$minus.hasClass('d-none')) {
