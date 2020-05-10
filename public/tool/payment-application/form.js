@@ -68,7 +68,7 @@ function amountCalcFunction() {
         }
     }else { // 負数時
         // テキスト設定
-        $amount.text(thousandSeparate(String(amount).replace(/-/g, '')));
+        $amount.text(thousandSeparate(removeMinus(amount)));
 
         // マイナス表示付加
         if($minus.hasClass('d-none')) {
@@ -121,7 +121,7 @@ function totalAmountCalc() {
         }
     }else { // 負数時
         // テキスト設定
-        $totalAmount.text(thousandSeparate(String(Math.floor(totalAmount)).replace(/-/g, '')));
+        $totalAmount.text(thousandSeparate(removeMinus(totalAmount)));
 
         // マイナス表示付加
         if($minus.hasClass('d-none')) {
@@ -149,4 +149,8 @@ function thousandSeparate(number) {
 
 function removeComma(number) {
     return String(number).replace(/,/g, '');
+}
+
+function removeMinus(number) {
+    return String(number).replace(/-/g, '');
 }
