@@ -9,6 +9,7 @@ $(function () {
 
         $clone.find('input').val('');
         $index.text(indexNum+1);
+        $clone.find("input[name='quantity']").val(1);
         $tbody.append($clone);
     });
 
