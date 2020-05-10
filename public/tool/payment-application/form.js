@@ -44,31 +44,95 @@ function amountCalcFunction() {
     const $quantity = $row.find("input[name='quantity']");
     const $unitPrice = $row.find("input[name='unit_price']");
     const $amount = $row.find('.amount');
+    const $amountTD = $amount.parent('td');
+    const $minus = $amountTD.children('.minus');
 
     const quantity = nanToZero(parseInt($quantity.val()));
     const unitPrice = nanToZero(parseInt($unitPrice.val()));
 
     const amount = quantity * unitPrice;
-    $amount.text(thousandSeparate(amount));
+
+    if(amount >= 0) { // 正数時
+        // テキスト設定
+        $amount.text(thousandSeparate(amount));
+
+        // マイナス表示削除
+        if(!$minus.hasClass('d-none')) {
+            $minus.addClass('d-none');
+        }
+
+        // 黒字に変更
+        if($amountTD.hasClass('text-danger')) {
+            $unitPrice.removeClass('text-danger');
+            $amountTD.removeClass('text-danger');
+        }
+    }else { // 負数時
+        // テキスト設定
+        $amount.text(thousandSeparate(String(amount).replace(/-/g, '')));
+
+        // マイナス表示付加
+        if($minus.hasClass('d-none')) {
+            $minus.removeClass('d-none');
+        }
+
+        // 赤字に変更
+        if(!$amountTD.hasClass('text-danger')) {
+            $unitPrice.addClass('text-danger');
+            $amountTD.addClass('text-danger');
+        }
+    }
 }
 
 // 合計額計算
 function totalAmountCalc() {
     const $rows = $(this).parents('tbody').children('tr');
     const $totalAmount = $rows.parents('table').find('.total-amount');
+    const $totalAmountTD = $totalAmount.parent('td');
+    const $minus = $totalAmountTD.children('.minus');
 
     let totalAmount = 0;
     $rows.each(function (index, element) {
         const $amount = $(element).find('.amount');
+        const $amountMinus = $amount.parent('td').children('.minus');
         const $taxRate = $(element).find("select[name='tax_rate']");
 
-        const amount = parseInt(removeComma($amount.text()));
+        let amount = parseInt(removeComma($amount.text()));
+        if(!$amountMinus.hasClass('d-none')) {
+            amount *= -1;
+        }
+
         const taxRate = parseInt($taxRate.val());
 
         totalAmount += amount * (taxRate*0.01 + 1);
     });
 
-    $totalAmount.text(thousandSeparate(Math.floor(totalAmount))); //小数切り捨て&コンマ区切り
+    if(totalAmount >= 0) { // 正数時
+        // テキスト設定
+        $totalAmount.text(thousandSeparate(Math.floor(totalAmount)));
+
+        // マイナス表示削除
+        if(!$minus.hasClass('d-none')) {
+            $minus.addClass('d-none');
+        }
+
+        // 黒字に変更
+        if($totalAmountTD.hasClass('text-danger')) {
+            $totalAmountTD.removeClass('text-danger');
+        }
+    }else { // 負数時
+        // テキスト設定
+        $totalAmount.text(thousandSeparate(String(Math.floor(totalAmount)).replace(/-/g, '')));
+
+        // マイナス表示付加
+        if($minus.hasClass('d-none')) {
+            $minus.removeClass('d-none');
+        }
+
+        // 赤字に変更
+        if(!$totalAmountTD.hasClass('text-danger')) {
+            $totalAmountTD.addClass('text-danger');
+        }
+    }
 }
 
 

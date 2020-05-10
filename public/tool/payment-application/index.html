@@ -73,9 +73,9 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">&yen;</span>
                                 </div>
-                                 <input type="number" min="0" class="form-control" name="unit_price">
+                                 <input type="number" class="form-control" name="unit_price">
                             </td>
-                            <td class="text-right align-middle">&yen;<span class="amount">0</span>-</td>
+                            <td class="text-right align-middle"><span class="minus d-none">△</span>&yen;<span class="amount">0</span>-</td>
                             <td><select class="form-control" name="tax_rate"><option value="10">10%</option><option value="8">8%(軽減税率)</option><option value="0">非課税</option></select></td>
                             <td><button class="btn btn-dark remove-row" type="button">行削除</button></td>
                         </tr>
@@ -84,7 +84,7 @@
                         <tr>
                             <td class="align-middle">#</td>
                             <td colspan="3" class="text-center align-middle">合計</td>
-                            <td colspan="2" class="form-sum text-right align-middle">&yen;<span class="total-amount">0</span>-</td>
+                            <td colspan="2" class="form-sum text-right align-middle"><span class="minus d-none">△</span>&yen;<span class="total-amount">0</span>-</td>
                             <td><button class="btn btn-dark add-row" type="button">行追加</button></td>
                         </tr>
                     </tfoot>
