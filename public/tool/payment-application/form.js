@@ -17,17 +17,21 @@ $(function () {
     // 行削除
     $('table').on('click','.remove-row', function () {
         const $target = $(this).parents('tr');
+        const $otherRows = $target.siblings('tr');
         const $indexFixTargets = $target.nextAll('tr');
         let $index = $target.children('.index');
         let indexNum = parseInt($index.text());
 
-        $target.remove();
+        // 最低1行は残す
+        if($otherRows.length > 0) {
+            $target.remove();
 
-        //削除行以降インデックス調整
-        $indexFixTargets.each(function (index, element) {
-            $(element).children('.index').text(indexNum);
-            indexNum++;
-        })
+            //削除行以降インデックス調整
+            $indexFixTargets.each(function (index, element) {
+                $(element).children('.index').text(indexNum);
+                indexNum++;
+            })
+        }
     });
 
     // 金額計算系イベント設定
