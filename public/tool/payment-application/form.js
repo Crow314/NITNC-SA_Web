@@ -50,8 +50,8 @@ function amountCalcFunction(e) {
     const $quantity = $item.find("input[name='quantity']");
     const $unitPrice = $item.find("input[name='unit_price']");
     const $amount = $item.find('.amount');
-    const $amountTD = $amount.parent('td');
-    const $minus = $amountTD.children('.minus');
+    const $amountText = $amount.parents('.text-amount');
+    const $minus = $amountText.children('.minus');
 
     const quantity = nanToZero(parseInt($quantity.val()));
     const unitPrice = nanToZero(parseInt($unitPrice.val()));
@@ -62,31 +62,23 @@ function amountCalcFunction(e) {
         // テキスト設定
         $amount.text(thousandSeparate(amount));
 
-        // マイナス表示削除
-        if(!$minus.hasClass('d-none')) {
-            $minus.addClass('d-none');
-        }
-
         // 黒字に変更
-        if($amountTD.hasClass('text-danger')) {
+        if($unitPrice.hasClass('text-danger')) {
             $unitPrice.removeClass('text-danger');
-            $amountTD.removeClass('text-danger');
+            $amountText.removeClass('text-danger');
         }
     }else { // 負数時
         // テキスト設定
         $amount.text(thousandSeparate(removeMinus(amount)));
 
-        // マイナス表示付加
-        if($minus.hasClass('d-none')) {
-            $minus.removeClass('d-none');
-        }
-
         // 赤字に変更
-        if(!$amountTD.hasClass('text-danger')) {
+        if(!$unitPrice.hasClass('text-danger')) {
             $unitPrice.addClass('text-danger');
-            $amountTD.addClass('text-danger');
+            $amountText.addClass('text-danger');
         }
     }
+
+    priceFormat(e, amount, $amountText)
 }
 
 // 合計額計算
@@ -96,14 +88,12 @@ function totalAmountCalc(e) {
     const $items = $receipt.find('.receipt-details').find('.receipt-item');
     const $totalSection = $receipt.find('.receipt-section-total');
     const $total= $totalSection.find('.receipt-total');
-    const $totalAmount = $total.find('.amount');
     const $amountText = $total.find('.text-amount');
-    const $minus = $amountText.children('.minus');
 
     let amountSum = new Map(); // taxRate: amount
     $items.each(function (index, element) {
         const $amount = $(element).find('.amount');
-        const $amountMinus = $amount.parent('td').children('.minus');
+        const $amountMinus = $amount.siblings('.minus');
         const $taxRate = $(element).find("select[name='tax_rate']");
 
         let amount = parseInt(removeComma($amount.text()));
@@ -125,9 +115,16 @@ function totalAmountCalc(e) {
         totalAmount += Math.floor(amount*(taxRate*0.01 + 1));
     });
 
-    if(totalAmount >= 0) { // 正数時
+    priceFormat(e, totalAmount, $amountText);
+}
+
+function priceFormat(e, price, $amountText) {
+    const $amount = $amountText.children('.amount');
+    const $minus = $amountText.children('.minus');
+
+    if(price >= 0) { // 正数時
         // テキスト設定
-        $totalAmount.text(thousandSeparate(totalAmount));
+        $amount.text(thousandSeparate(price));
 
         // マイナス表示削除
         if(!$minus.hasClass('d-none')) {
@@ -140,7 +137,7 @@ function totalAmountCalc(e) {
         }
     }else { // 負数時
         // テキスト設定
-        $totalAmount.text(thousandSeparate(removeMinus(totalAmount)));
+        $amount.text(thousandSeparate(removeMinus(price)));
 
         // マイナス表示付加
         if($minus.hasClass('d-none')) {
@@ -153,7 +150,6 @@ function totalAmountCalc(e) {
         }
     }
 }
-
 
 function nanToZero(number) {
     if(isNaN(Number(number))) {
