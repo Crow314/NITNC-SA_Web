@@ -1,6 +1,6 @@
 $(function () {
     // 行追加
-    $('.add-row').click(function () {
+    $('.add-item').click(function () {
         const $tbody = $(this).parents('table').children('tbody');
         const $target = $tbody.children('tr:last');
         const $clone = $target.clone();
@@ -15,15 +15,15 @@ $(function () {
     });
 
     // 行削除
-    $('table').on('click','.remove-row', function () {
+    $('table').on('click','.remove-item', function (e) {
         const $target = $(this).parents('tr');
-        const $otherRows = $target.siblings('tr');
+        const $otherItems = $target.siblings('tr');
         const $indexFixTargets = $target.nextAll('tr');
         let $index = $target.children('.index');
         let indexNum = parseInt($index.text());
 
         // 最低1行は残す
-        if($otherRows.length > 0) {
+        if($otherItems.length > 0) {
             $target.remove();
 
             //削除行以降インデックス調整
@@ -44,11 +44,12 @@ $(function () {
 });
 
 // 各行金額計算
-function amountCalcFunction() {
-    const $row = $(this).parents('tr');
-    const $quantity = $row.find("input[name='quantity']");
-    const $unitPrice = $row.find("input[name='unit_price']");
-    const $amount = $row.find('.amount');
+function amountCalcFunction(e) {
+    const element = e.currentTarget;
+    const $item = $(element).parents('.receipt-item');
+    const $quantity = $item.find("input[name='quantity']");
+    const $unitPrice = $item.find("input[name='unit_price']");
+    const $amount = $item.find('.amount');
     const $amountTD = $amount.parent('td');
     const $minus = $amountTD.children('.minus');
 
@@ -89,14 +90,18 @@ function amountCalcFunction() {
 }
 
 // 合計額計算
-function totalAmountCalc() {
-    const $rows = $(this).parents('tbody').children('tr');
-    const $totalAmount = $rows.parents('table').find('.total-amount');
-    const $totalAmountTD = $totalAmount.parent('td');
-    const $minus = $totalAmountTD.children('.minus');
+function totalAmountCalc(e) {
+    const element = e.currentTarget;
+    const $receipt = $(element).parents('.receipt');
+    const $items = $receipt.find('.receipt-details').find('.receipt-item');
+    const $totalSection = $receipt.find('.receipt-section-total');
+    const $total= $totalSection.find('.receipt-total');
+    const $totalAmount = $total.find('.amount');
+    const $amountText = $total.find('.text-amount');
+    const $minus = $amountText.children('.minus');
 
     let amountSum = new Map(); // taxRate: amount
-    $rows.each(function (index, element) {
+    $items.each(function (index, element) {
         const $amount = $(element).find('.amount');
         const $amountMinus = $amount.parent('td').children('.minus');
         const $taxRate = $(element).find("select[name='tax_rate']");
@@ -130,8 +135,8 @@ function totalAmountCalc() {
         }
 
         // 黒字に変更
-        if($totalAmountTD.hasClass('text-danger')) {
-            $totalAmountTD.removeClass('text-danger');
+        if($amountText.hasClass('text-danger')) {
+            $amountText.removeClass('text-danger');
         }
     }else { // 負数時
         // テキスト設定
@@ -143,8 +148,8 @@ function totalAmountCalc() {
         }
 
         // 赤字に変更
-        if(!$totalAmountTD.hasClass('text-danger')) {
-            $totalAmountTD.addClass('text-danger');
+        if(!$amountText.hasClass('text-danger')) {
+            $amountText.addClass('text-danger');
         }
     }
 }
