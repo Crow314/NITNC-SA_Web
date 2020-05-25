@@ -156,7 +156,7 @@ function priceFormat(e: JQuery.TriggeredEvent, price: number, $amountText: JQuer
     }
 }
 
-function parseNan(targetNum: string | number | string[] | undefined, changeTo: number) {
+function parseNan(targetNum: string | number | string[] | undefined, changeTo: number): number {
     switch(typeof targetNum) {
         case 'string':
             if(targetNum === '') {
@@ -176,14 +176,14 @@ function parseNan(targetNum: string | number | string[] | undefined, changeTo: n
     return Number(targetNum);
 }
 
-function thousandSeparate(number: number) {
+function thousandSeparate(number: number): string {
     return String(number).replace( /(\d)(?=(\d\d\d)+(?!\d))/g, '$1,');
 }
 
-function removeComma(number: string) {
+function removeComma(number: string): number {
     return Number(number.replace(/,/g, ''));
 }
 
-function removeMinus(number: number) {
+function removeMinus(number: number): number {
     return Number(String(number).replace(/-/g, ''));
 }
