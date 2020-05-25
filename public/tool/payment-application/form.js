@@ -1,6 +1,6 @@
 $(function () {
     // 行追加
-    $('.add-item').click(function () {
+    $('.add-item').on('click', function (e) {
         const $tbody = $(this).parents('table').children('tbody');
         const $target = $tbody.children('tr:last');
         const $clone = $target.clone();
@@ -51,10 +51,9 @@ function amountCalcFunction(e) {
     const $unitPrice = $item.find("input[name='unit_price']");
     const $amount = $item.find('.amount');
     const $amountText = $amount.parents('.text-amount');
-    const $minus = $amountText.children('.minus');
 
-    const quantity = nanToZero(parseInt($quantity.val()));
-    const unitPrice = nanToZero(parseInt($unitPrice.val()));
+    const quantity = parseNan(parseInt($quantity.val()), 1);
+    const unitPrice = parseNan(parseInt($unitPrice.val()), 0);
 
     const amount = quantity * unitPrice;
 
@@ -151,11 +150,11 @@ function priceFormat(e, price, $amountText) {
     }
 }
 
-function nanToZero(number) {
-    if(isNaN(Number(number))) {
-        number = 0;
+function parseNan(targetNum, changeTo) {
+    if(isNaN(Number(targetNum))) {
+        targetNum = changeTo;
     }
-    return number;
+    return targetNum;
 }
 
 function thousandSeparate(number) {
