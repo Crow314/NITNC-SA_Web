@@ -1,158 +1,215 @@
 "use strict";
-$(function () {
-    // 行追加
-    $('.add-item').on('click', (e) => {
-        const element = e.currentTarget;
-        const $tbody = $(element).parents('table').children('tbody');
-        const $target = $tbody.children('tr:last');
-        const $clone = $target.clone();
-        const $index = $clone.children('.index');
-        const indexNum = parseInt($index.text());
-        $clone.find('input').val('');
-        $index.text(indexNum + 1);
-        $clone.find('.amount').text('0');
-        $tbody.append($clone);
-    });
-    // 行削除
-    $('table').on('click', '.remove-item', (e) => {
-        const element = e.currentTarget;
-        const $target = $(element).parents('tr');
-        const $otherItems = $target.siblings('tr');
-        const $indexFixTargets = $target.nextAll('tr');
-        let $index = $target.children('.index');
-        let indexNum = parseInt($index.text());
-        // 最低1行は残す
-        if ($otherItems.length > 0) {
-            $target.remove();
-            //削除行以降インデックス調整
-            $indexFixTargets.each(function (index, element) {
-                $(element).children('.index').text(indexNum);
-                indexNum++;
-            });
-        }
-    });
-    // 金額計算系イベント設定
-    $('tbody').on('change focus blur', "input[name='quantity']", amountCalcFunction)
-        .on('change focus blur', "input[name='unit_price']", amountCalcFunction)
-        .on('change focus blur', "input[name='quantity']", totalAmountCalc)
-        .on('change focus blur', "input[name='unit_price']", totalAmountCalc)
-        .on('change', "select[name='tax_rate']", totalAmountCalc);
+$(() => {
+    const $receipt = $('.receipt');
+    new Receipt($receipt);
 });
-// 各行金額計算
-function amountCalcFunction(e) {
-    const element = e.currentTarget;
-    const $item = $(element).parents('.receipt-item');
-    const $quantity = $item.find("input[name='quantity']");
-    const $unitPrice = $item.find("input[name='unit_price']");
-    const $amount = $item.find('.amount');
-    const $amountText = $amount.parents('.text-amount');
-    const quantity = parseNan($quantity.val(), 1);
-    const unitPrice = parseNan($unitPrice.val(), 0);
-    const amount = quantity * unitPrice;
-    console.debug('type: ' + typeof $quantity.val());
-    console.debug('quantity: ' + quantity);
-    console.debug('unitPrice: ' + unitPrice);
-    console.debug('amount: ' + amount);
-    if (amount >= 0) { // 正数時
-        // テキスト設定
-        $amount.text(thousandSeparate(amount));
-        // 黒字に変更
-        if ($unitPrice.hasClass('text-danger')) {
-            $unitPrice.removeClass('text-danger');
-            $amountText.removeClass('text-danger');
+class Receipt {
+    constructor($receipt) {
+        this.$jQuery = $receipt.first();
+        if (Receipt.$template === undefined) {
+            Receipt.$template = this.$jQuery.clone();
+        }
+        this.$receiptDetails = $receipt.find('.receipt-details');
+        this.$receiptTotal = $receipt.find('.receipt-total');
+        this.payee = '';
+        this.about = '';
+        this.subtotal = 0;
+        this.taxAmount = 0;
+        this.totalAmount = 0;
+        this.subtotalByTaxRate = new Map();
+        this.taxAmountByRate = new Map();
+        const $item = this.$receiptDetails.find('.receipt-item');
+        const item = new Item(this, $item, 1);
+        this.items = [item];
+        this.$jQuery.on('click', '.add-item', this.addItem.bind(this));
+    }
+    update() {
+        this.calcTotalAmount();
+        this.setHTMLValue();
+    }
+    updateItemIndex() {
+        this.items.forEach(item => item.updateIndex());
+        this.update();
+    }
+    addItem() {
+        const $item = Item.getTemplate();
+        const item = new Item(this, $item);
+        this.$receiptDetails.append($item);
+        this.items.push(item);
+        this.updateItemIndex();
+    }
+    removeItem(item) {
+        if (this.items.length > 1) { // 最低1行は残す
+            item.$jQuery.remove();
+            this.items = this.items.filter(elem => elem !== item);
+            this.updateItemIndex();
         }
     }
-    else { // 負数時
-        // テキスト設定
-        $amount.text(thousandSeparate(removeMinus(amount)));
-        // 赤字に変更
-        if (!$unitPrice.hasClass('text-danger')) {
-            $unitPrice.addClass('text-danger');
-            $amountText.addClass('text-danger');
-        }
-    }
-    priceFormat(e, amount, $amountText);
-}
-// 合計額計算
-function totalAmountCalc(e) {
-    const element = e.currentTarget;
-    const $receipt = $(element).parents('.receipt');
-    const $items = $receipt.find('.receipt-details').find('.receipt-item');
-    const $totalSection = $receipt.find('.receipt-section-total');
-    const $total = $totalSection.find('.receipt-total');
-    const $amountText = $total.find('.text-amount');
-    let amountSum = new Map(); // taxRate: amount
-    $items.each(function (index, element) {
-        const $amount = $(element).find('.amount');
-        const $amountMinus = $amount.siblings('.minus');
-        const $taxRate = $(element).find("select[name='tax_rate']");
-        let amount = removeComma($amount.text());
-        if (!$amountMinus.hasClass('d-none')) {
-            amount *= -1;
-        }
-        const taxRate = Number($taxRate.val());
-        if (!amountSum.has(taxRate)) { // 同一税率初出時
-            amountSum.set(taxRate, 0);
-        }
-        amountSum.set(taxRate, amountSum.get(taxRate) + amount); // +=的な
-    });
-    let totalAmount = 0;
-    amountSum.forEach(function (amount, taxRate) {
-        totalAmount += Math.floor(amount * (taxRate * 0.01 + 1));
-    });
-    priceFormat(e, totalAmount, $amountText);
-}
-function priceFormat(e, price, $amountText) {
-    const $amount = $amountText.children('.amount');
-    const $minus = $amountText.children('.minus');
-    if (price >= 0) { // 正数時
-        // テキスト設定
-        $amount.text(thousandSeparate(price));
-        // マイナス表示削除
-        if (!$minus.hasClass('d-none')) {
-            $minus.addClass('d-none');
-        }
-        // 黒字に変更
-        if ($amountText.hasClass('text-danger')) {
-            $amountText.removeClass('text-danger');
-        }
-    }
-    else { // 負数時
-        // テキスト設定
-        $amount.text(thousandSeparate(removeMinus(price)));
-        // マイナス表示付加
-        if ($minus.hasClass('d-none')) {
-            $minus.removeClass('d-none');
-        }
-        // 赤字に変更
-        if (!$amountText.hasClass('text-danger')) {
-            $amountText.addClass('text-danger');
-        }
-    }
-}
-function parseNan(targetNum, changeTo) {
-    switch (typeof targetNum) {
-        case 'string':
-            if (targetNum === '') {
-                targetNum = changeTo;
+    calcTotalAmount() {
+        //reset
+        this.subtotal = 0;
+        this.taxAmount = 0;
+        this.subtotalByTaxRate = new Map();
+        this.taxAmountByRate = new Map();
+        this.items.forEach(item => {
+            const amount = item.getAmount();
+            const taxRate = item.getTaxRate();
+            const tax = amount * taxRate * 0.01;
+            if (!this.subtotalByTaxRate.has(taxRate)) { // 同一税率初出時
+                this.subtotalByTaxRate.set(taxRate, 0);
+                this.taxAmountByRate.set(taxRate, 0);
             }
-            break;
-        case 'number':
-            if (Number.isNaN(targetNum)) {
-                targetNum = changeTo;
+            this.subtotalByTaxRate.set(taxRate, Receipt.parseNumber(this.subtotalByTaxRate.get(taxRate)) + amount); // +=的な
+            this.taxAmountByRate.set(taxRate, Receipt.parseNumber(this.taxAmountByRate.get(taxRate)) + tax); // +=的な
+        });
+        let subtotal = 0;
+        let tax = 0;
+        this.subtotalByTaxRate.forEach((amount) => {
+            subtotal += Math.floor(amount);
+        });
+        this.taxAmountByRate.forEach((amount) => {
+            tax += Math.floor(amount);
+        });
+        this.subtotal = subtotal;
+        this.taxAmount = tax;
+        this.totalAmount = this.subtotal + this.taxAmount;
+    }
+    setHTMLValue() {
+        Receipt.setAmountHTML(this.totalAmount, this.$receiptTotal);
+    }
+    getItemIndex(item) {
+        return this.items.indexOf(item) + 1;
+    }
+    static parseNumber(inputNum) {
+        let result;
+        switch (typeof inputNum) {
+            case 'string':
+                result = parseInt(inputNum);
+                break;
+            case 'number':
+                result = inputNum;
+                break;
+            default:
+                result = NaN;
+        }
+        return result;
+    }
+    static thousandSeparate(number) {
+        return String(number).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1,');
+    }
+    static removeMinus(number) {
+        return Number(String(number).replace(/-/g, ''));
+    }
+    static setAmountHTML(price, $textBlock) {
+        const $amountText = $textBlock.find('.text-amount');
+        const $amount = $amountText.children('.amount');
+        const $minus = $amountText.children('.minus');
+        if (price >= 0) { // 正数時
+            // テキスト設定
+            $amount.text(Receipt.thousandSeparate(price));
+            // マイナス表示削除
+            if (!$minus.hasClass('d-none')) {
+                $minus.addClass('d-none');
             }
-            break;
-        default:
+            // 黒字に変更
+            if ($amountText.hasClass('text-danger')) {
+                $amountText.removeClass('text-danger');
+            }
+        }
+        else { // 負数時
+            // テキスト設定
+            $amount.text(Receipt.thousandSeparate(Receipt.removeMinus(price)));
+            // マイナス表示付加
+            if ($minus.hasClass('d-none')) {
+                $minus.removeClass('d-none');
+            }
+            // 赤字に変更
+            if (!$amountText.hasClass('text-danger')) {
+                $amountText.addClass('text-danger');
+            }
+        }
+    }
+}
+class Item {
+    constructor(receipt, $item, index = 0) {
+        this.receipt = receipt;
+        this.$jQuery = $item.first();
+        if (Item.$template === undefined) {
+            Item.$template = this.$jQuery.clone();
+        }
+        this.$index = this.$jQuery.find('.index');
+        this.$name = this.$jQuery.find("input[name='name']");
+        this.$quantity = this.$jQuery.find("input[name='quantity']");
+        this.$unitPrice = this.$jQuery.find("input[name='unit_price']");
+        this.$amount = this.$jQuery.find('.amount');
+        this.$taxRate = this.$jQuery.find("select[name='tax_rate']");
+        this.$removeButton = this.$jQuery.find(".remove-item");
+        this.index = index;
+        this.name = '';
+        this.quantity = NaN;
+        this.unitPrice = 0;
+        this.amount = 0;
+        this.calcAmount();
+        this.taxRate = 10;
+        this.setHTMLValue();
+        this.$jQuery.on('change', 'input,select', this.update.bind(this));
+        this.$removeButton.on('click', this.remove.bind(this));
+    }
+    update() {
+        this.input();
+        this.setHTMLValue();
+        this.receipt.update();
+    }
+    remove() {
+        this.receipt.removeItem(this);
+    }
+    input() {
+        this.name = String(this.$name.val());
+        this.quantity = Receipt.parseNumber(this.$quantity.val());
+        this.unitPrice = Receipt.parseNumber(this.$unitPrice.val());
+        this.taxRate = Number(this.$taxRate.val());
+        this.calcAmount();
+    }
+    setHTMLValue() {
+        this.$index.text(this.index);
+        this.checkUnitPriceColor();
+        Receipt.setAmountHTML(this.amount, this.$jQuery);
+    }
+    updateIndex() {
+        this.index = this.receipt.getItemIndex(this);
+        this.setHTMLValue();
+    }
+    checkUnitPriceColor() {
+        if (this.unitPrice >= 0) { // 正数時
+            // 黒字に変更
+            if (this.$unitPrice.hasClass('text-danger')) {
+                this.$unitPrice.removeClass('text-danger');
+            }
+        }
+        else { // 負数時
+            // 赤字に変更
+            if (!this.$unitPrice.hasClass('text-danger')) {
+                this.$unitPrice.addClass('text-danger');
+            }
+        }
+    }
+    calcAmount() {
+        this.amount = Item.parseNan(this.quantity, 1) * Item.parseNan(this.unitPrice, 0);
+    }
+    static parseNan(targetNum, changeTo) {
+        if (Number.isNaN(targetNum)) {
             targetNum = changeTo;
+        }
+        return targetNum;
     }
-    return Number(targetNum);
-}
-function thousandSeparate(number) {
-    return String(number).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1,');
-}
-function removeComma(number) {
-    return Number(number.replace(/,/g, ''));
-}
-function removeMinus(number) {
-    return Number(String(number).replace(/-/g, ''));
+    //Getter
+    static getTemplate() {
+        return Item.$template.clone();
+    }
+    getAmount() {
+        return this.amount;
+    }
+    getTaxRate() {
+        return this.taxRate;
+    }
 }
