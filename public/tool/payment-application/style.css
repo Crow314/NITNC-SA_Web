@@ -1,4 +1,8 @@
 /** Effective Block **/
+.hide {
+    display: none;
+}
+
 .receipt-main {
     font-size: large;
 }

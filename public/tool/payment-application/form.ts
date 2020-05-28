@@ -5,7 +5,7 @@ $( () => {
 
 class Receipt {
     static readonly taxRates: Array<number> = [10, 8, 0];
-    static readonly $template: JQuery = $('.receipt').first().clone();
+    private static $template: JQuery;
 
     readonly $jQuery: JQuery;
     readonly $receiptDetails: JQuery;
@@ -25,6 +25,9 @@ class Receipt {
 
     constructor($receipt: JQuery) {
         this.$jQuery = $receipt.first();
+        if(Receipt.$template === undefined) {
+            Receipt.$template = this.$jQuery.clone();
+        }
 
         this.$receiptDetails = $receipt.find('.receipt-details');
         this.$receiptTotal = $receipt.find('.receipt-total');
@@ -149,36 +152,35 @@ class Receipt {
             $amount.text(Receipt.thousandSeparate(amount));
 
             // マイナス表示削除
-            if(!$minus.hasClass('d-none')) {
-                $minus.addClass('d-none');
-            }
+            $minus.hide();
 
             // 黒字に変更
-            if($amountText.hasClass('text-danger')) {
-                $amountText.removeClass('text-danger');
-            }
+            $amountText.removeClass('text-danger');
         }else { // 負数時
             // テキスト設定
             $amount.text(Receipt.thousandSeparate(Receipt.removeMinus(amount)));
 
             // マイナス表示付加
-            if($minus.hasClass('d-none')) {
-                $minus.removeClass('d-none');
-            }
+            $minus.show();
 
             // 赤字に変更
-            if(!$amountText.hasClass('text-danger')) {
-                $amountText.addClass('text-danger');
-            }
+            $amountText.addClass('text-danger');
         }
     }
 
     static setByTaxAmountHTML(amountMap: Map<number, number>, $textBlock: JQuery): void {
         let sum: number = 0;
         amountMap.forEach((amount: number, taxRate: number) => {
+            amount = Math.floor(amount);
             const $target: JQuery = $textBlock.children('.receipt-tax' + String(taxRate));
-            Receipt.setAmountHTML(Math.floor(amount), $target);
+            Receipt.setAmountHTML(amount, $target);
             sum += amount;
+
+            if(amount === 0) {
+                $target.hide();
+            }else {
+                $target.show();
+            }
         });
         const $main: JQuery = $textBlock.children('.receipt-main');
         this.setAmountHTML(Math.floor(sum), $main);
@@ -200,7 +202,7 @@ class Receipt {
 }
 
 class Item {
-    static readonly $template: JQuery = $('.receipt-item').first().clone();
+    private static $template: JQuery;
 
     readonly $jQuery: JQuery;
     readonly $index: JQuery;
@@ -223,6 +225,10 @@ class Item {
         this.receipt = receipt;
 
         this.$jQuery = $item.first();
+        if(Item.$template === undefined) {
+            Item.$template = this.$jQuery.clone();
+            console.debug(Item.$template);
+        }
 
         this.$index = this.$jQuery.find('.index');
         this.$name = this.$jQuery.find("input[name='name']");

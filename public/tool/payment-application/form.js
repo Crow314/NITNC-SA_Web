@@ -7,6 +7,9 @@ let Receipt = /** @class */ (() => {
     class Receipt {
         constructor($receipt) {
             this.$jQuery = $receipt.first();
+            if (Receipt.$template === undefined) {
+                Receipt.$template = this.$jQuery.clone();
+            }
             this.$receiptDetails = $receipt.find('.receipt-details');
             this.$receiptTotal = $receipt.find('.receipt-total');
             this.$receiptSubtotal = $receipt.find('.receipt-subtotal');
@@ -106,33 +109,32 @@ let Receipt = /** @class */ (() => {
                 // テキスト設定
                 $amount.text(Receipt.thousandSeparate(amount));
                 // マイナス表示削除
-                if (!$minus.hasClass('d-none')) {
-                    $minus.addClass('d-none');
-                }
+                $minus.hide();
                 // 黒字に変更
-                if ($amountText.hasClass('text-danger')) {
-                    $amountText.removeClass('text-danger');
-                }
+                $amountText.removeClass('text-danger');
             }
             else { // 負数時
                 // テキスト設定
                 $amount.text(Receipt.thousandSeparate(Receipt.removeMinus(amount)));
                 // マイナス表示付加
-                if ($minus.hasClass('d-none')) {
-                    $minus.removeClass('d-none');
-                }
+                $minus.show();
                 // 赤字に変更
-                if (!$amountText.hasClass('text-danger')) {
-                    $amountText.addClass('text-danger');
-                }
+                $amountText.addClass('text-danger');
             }
         }
         static setByTaxAmountHTML(amountMap, $textBlock) {
             let sum = 0;
             amountMap.forEach((amount, taxRate) => {
+                amount = Math.floor(amount);
                 const $target = $textBlock.children('.receipt-tax' + String(taxRate));
-                Receipt.setAmountHTML(Math.floor(amount), $target);
+                Receipt.setAmountHTML(amount, $target);
                 sum += amount;
+                if (amount === 0) {
+                    $target.hide();
+                }
+                else {
+                    $target.show();
+                }
             });
             const $main = $textBlock.children('.receipt-main');
             this.setAmountHTML(Math.floor(sum), $main);
@@ -151,90 +153,89 @@ let Receipt = /** @class */ (() => {
         }
     }
     Receipt.taxRates = [10, 8, 0];
-    Receipt.$template = $('.receipt').first().clone();
     return Receipt;
 })();
-let Item = /** @class */ (() => {
-    class Item {
-        constructor(receipt, $item, index = 0) {
-            this.receipt = receipt;
-            this.$jQuery = $item.first();
-            this.$index = this.$jQuery.find('.index');
-            this.$name = this.$jQuery.find("input[name='name']");
-            this.$quantity = this.$jQuery.find("input[name='quantity']");
-            this.$unitPrice = this.$jQuery.find("input[name='unit_price']");
-            this.$amount = this.$jQuery.find('.amount');
-            this.$taxRate = this.$jQuery.find("select[name='tax_rate']");
-            this.$removeButton = this.$jQuery.find(".remove-item");
-            this.index = index;
-            this.name = '';
-            this.quantity = NaN;
-            this.unitPrice = 0;
-            this.amount = 0;
-            this.calcAmount();
-            this.taxRate = 10;
-            this.setHTMLValue();
-            this.$jQuery.on('change', 'input,select', this.update.bind(this));
-            this.$removeButton.on('click', this.remove.bind(this));
+class Item {
+    constructor(receipt, $item, index = 0) {
+        this.receipt = receipt;
+        this.$jQuery = $item.first();
+        if (Item.$template === undefined) {
+            Item.$template = this.$jQuery.clone();
+            console.debug(Item.$template);
         }
-        update() {
-            this.input();
-            this.setHTMLValue();
-            this.receipt.update();
-        }
-        remove() {
-            this.receipt.removeItem(this);
-        }
-        input() {
-            this.name = String(this.$name.val());
-            this.quantity = Receipt.parseNumber(this.$quantity.val());
-            this.unitPrice = Receipt.parseNumber(this.$unitPrice.val());
-            this.taxRate = Number(this.$taxRate.val());
-            this.calcAmount();
-        }
-        setHTMLValue() {
-            this.$index.text(this.index);
-            this.checkUnitPriceColor();
-            Receipt.setAmountHTML(this.amount, this.$jQuery);
-        }
-        updateIndex() {
-            this.index = this.receipt.getItemIndex(this);
-            this.setHTMLValue();
-        }
-        checkUnitPriceColor() {
-            if (this.unitPrice >= 0) { // 正数時
-                // 黒字に変更
-                if (this.$unitPrice.hasClass('text-danger')) {
-                    this.$unitPrice.removeClass('text-danger');
-                }
-            }
-            else { // 負数時
-                // 赤字に変更
-                if (!this.$unitPrice.hasClass('text-danger')) {
-                    this.$unitPrice.addClass('text-danger');
-                }
+        this.$index = this.$jQuery.find('.index');
+        this.$name = this.$jQuery.find("input[name='name']");
+        this.$quantity = this.$jQuery.find("input[name='quantity']");
+        this.$unitPrice = this.$jQuery.find("input[name='unit_price']");
+        this.$amount = this.$jQuery.find('.amount');
+        this.$taxRate = this.$jQuery.find("select[name='tax_rate']");
+        this.$removeButton = this.$jQuery.find(".remove-item");
+        this.index = index;
+        this.name = '';
+        this.quantity = NaN;
+        this.unitPrice = 0;
+        this.amount = 0;
+        this.calcAmount();
+        this.taxRate = 10;
+        this.setHTMLValue();
+        this.$jQuery.on('change', 'input,select', this.update.bind(this));
+        this.$removeButton.on('click', this.remove.bind(this));
+    }
+    update() {
+        this.input();
+        this.setHTMLValue();
+        this.receipt.update();
+    }
+    remove() {
+        this.receipt.removeItem(this);
+    }
+    input() {
+        this.name = String(this.$name.val());
+        this.quantity = Receipt.parseNumber(this.$quantity.val());
+        this.unitPrice = Receipt.parseNumber(this.$unitPrice.val());
+        this.taxRate = Number(this.$taxRate.val());
+        this.calcAmount();
+    }
+    setHTMLValue() {
+        this.$index.text(this.index);
+        this.checkUnitPriceColor();
+        Receipt.setAmountHTML(this.amount, this.$jQuery);
+    }
+    updateIndex() {
+        this.index = this.receipt.getItemIndex(this);
+        this.setHTMLValue();
+    }
+    checkUnitPriceColor() {
+        if (this.unitPrice >= 0) { // 正数時
+            // 黒字に変更
+            if (this.$unitPrice.hasClass('text-danger')) {
+                this.$unitPrice.removeClass('text-danger');
             }
         }
-        calcAmount() {
-            this.amount = Item.parseNan(this.quantity, 1) * Item.parseNan(this.unitPrice, 0);
-        }
-        static parseNan(targetNum, changeTo) {
-            if (Number.isNaN(targetNum)) {
-                targetNum = changeTo;
+        else { // 負数時
+            // 赤字に変更
+            if (!this.$unitPrice.hasClass('text-danger')) {
+                this.$unitPrice.addClass('text-danger');
             }
-            return targetNum;
-        }
-        //Getter
-        static getTemplate() {
-            return Item.$template.clone();
-        }
-        getAmount() {
-            return this.amount;
-        }
-        getTaxRate() {
-            return this.taxRate;
         }
     }
-    Item.$template = $('.receipt-item').first().clone();
-    return Item;
-})();
+    calcAmount() {
+        this.amount = Item.parseNan(this.quantity, 1) * Item.parseNan(this.unitPrice, 0);
+    }
+    static parseNan(targetNum, changeTo) {
+        if (Number.isNaN(targetNum)) {
+            targetNum = changeTo;
+        }
+        return targetNum;
+    }
+    //Getter
+    static getTemplate() {
+        return Item.$template.clone();
+    }
+    getAmount() {
+        return this.amount;
+    }
+    getTaxRate() {
+        return this.taxRate;
+    }
+}
