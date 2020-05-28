@@ -6,6 +6,7 @@
 
         <!-- CSS Library -->
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
 
         <!-- JS Library -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" crossorigin="anonymous"></script>
@@ -54,13 +55,13 @@
             <div class="container">
                 <h2>立替金還付申請</h2>
                 <div class="receipt">
-                    <div class="receipt-property">
-                        <p><label>支払先 <input class="form-control" type="text" name="payee"></label></p>
-                        <p><label>但し書 <input class="form-control" type="text" name="about"></label></p>
-                        <p><label>内税/外税 <select class="form-control" name="tax_mode">
+                    <div class="receipt-property row">
+                        <p class="col-lg-3 col-sm-6"><label>支払先 <input class="form-control" type="text" name="payee"></label></p>
+                        <p class="col-lg-3 col-sm-6"><label>但し書 <input class="form-control" type="text" name="about"></label></p>
+                        <p class="col-lg-2 col-sm-6"><label>内税/外税 <select class="form-control" name="tax_mode">
                             <option value="included">内税</option><option value="added">外税</option>
                         </select></label></p>
-                        <p><label>消費税端数処理方法 <select class="form-control" name="round_mode">
+                        <p class="col-lg-3 col-sm-6"><label>消費税端数処理方法 <select class="form-control" name="round_mode">
                             <option value="round_down">切り捨て</option><option value="round_off">四捨五入</option><option value="round_up">切り上げ</option>
                         </select></label></p>
                     </div>
@@ -80,7 +81,7 @@
                                 <th class="align-middle">単価</th>
                                 <th class="align-middle">金額</th>
                                 <th class="align-middle">消費税率</th>
-                                <th class="text-center"><button class="btn btn-secondary add-item" type="button">+</button></th>
+                                <th class="text-center"><button class="btn btn-secondary add-item" type="button"><i class="fas fa-plus"></i></button></th>
                             </tr>
                         </thead>
                         <tbody class="receipt-details">
@@ -98,7 +99,7 @@
                                 <td><select class="form-control" name="tax_rate">
                                     <option value="10">10%</option><option value="8">8%(軽減税率)</option><option value="0">非課税</option>
                                 </select></td>
-                                <td class="text-center"><button class="btn btn-secondary remove-item" type="button">-</button></td>
+                                <td class="text-center"><button class="btn btn-secondary remove-item" type="button"><i class="fas fa-minus"></i></button></td>
                             </tr>
                         </tbody>
                     </table>
