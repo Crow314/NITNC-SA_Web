@@ -54,6 +54,13 @@
             <div class="container">
                 <h2>立替金還付申請</h2>
                 <div class="receipt">
+                    <div class="receipt-property">
+                        <p><label>支払先 <input class="form-control" type="text" name="payee"></label></p>
+                        <p><label>但し書 <input class="form-control" type="text" name="about"></label></p>
+                        <p><label>消費税端数処理方法 <select class="form-control" name="round_mode">
+                            <option value="round_down">切り捨て</option><option value="round_off">四捨五入</option><option value="round_up">切り上げ</option>
+                        </select></label></p>
+                    </div>
                     <table class="table table-striped table-bordered">
                         <colgroup span="1" style="width:5%;"> <!-- # -->
                         <colgroup span="1" style="width:30%;"> <!-- 名称 -->

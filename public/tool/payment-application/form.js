@@ -16,6 +16,7 @@ let Receipt = /** @class */ (() => {
             this.$receiptTaxAdded = $receipt.find('.receipt-tax-added');
             this.payee = '';
             this.about = '';
+            this.roundMode = RoundMode.RoundOff;
             this.subtotal = 0;
             this.taxAmount = 0;
             this.totalAmount = 0;
@@ -25,10 +26,30 @@ let Receipt = /** @class */ (() => {
             const item = new Item(this, $item, 1);
             this.items = [item];
             this.$jQuery.on('click', '.add-item', this.addItem.bind(this));
+            this.$jQuery.children('.receipt-property').on('change', 'input,select', this.update.bind(this));
         }
         update() {
+            this.input();
             this.calcTotalAmount();
             this.setHTMLValue();
+        }
+        input() {
+            this.payee = String(this.$jQuery.find("input[name='payee']").val());
+            this.about = String(this.$jQuery.find("input[name='about']").val());
+            const roundModeStr = String(this.$jQuery.find("select[name='round_mode']").val());
+            let roundMode = RoundMode.RoundDown;
+            switch (roundModeStr) {
+                case 'round_off':
+                    roundMode = RoundMode.RoundOff;
+                    break;
+                case 'round_down':
+                    roundMode = RoundMode.RoundDown;
+                    break;
+                case 'round_up':
+                    roundMode = RoundMode.RoundUp;
+                    break;
+            }
+            this.roundMode = roundMode;
         }
         updateItemIndex() {
             this.items.forEach(item => item.updateIndex());
@@ -67,7 +88,7 @@ let Receipt = /** @class */ (() => {
                 subtotal += amount;
             });
             this.taxAmountByRate.forEach((amount) => {
-                tax += Math.floor(amount);
+                tax += Receipt.roundValue(amount, this.roundMode);
             });
             this.subtotal = subtotal;
             this.taxAmount = tax;
@@ -75,8 +96,8 @@ let Receipt = /** @class */ (() => {
         }
         setHTMLValue() {
             Receipt.setAmountHTML(this.totalAmount, this.$receiptTotal);
-            Receipt.setByTaxAmountHTML(this.subtotalByTaxRate, this.$receiptSubtotal);
-            Receipt.setByTaxAmountHTML(this.taxAmountByRate, this.$receiptTaxAdded);
+            Receipt.setByTaxAmountHTML(this.subtotalByTaxRate, this.$receiptSubtotal, this.roundMode);
+            Receipt.setByTaxAmountHTML(this.taxAmountByRate, this.$receiptTaxAdded, this.roundMode);
         }
         getItemIndex(item) {
             return this.items.indexOf(item) + 1;
@@ -122,10 +143,10 @@ let Receipt = /** @class */ (() => {
                 $amountText.addClass('text-danger');
             }
         }
-        static setByTaxAmountHTML(amountMap, $textBlock) {
+        static setByTaxAmountHTML(amountMap, $textBlock, roundMode) {
             let sum = 0;
             amountMap.forEach((amount, taxRate) => {
-                amount = Math.floor(amount);
+                amount = Receipt.roundValue(amount, roundMode);
                 const $target = $textBlock.children('.receipt-tax' + String(taxRate));
                 Receipt.setAmountHTML(amount, $target);
                 sum += amount;
@@ -137,7 +158,7 @@ let Receipt = /** @class */ (() => {
                 }
             });
             const $main = $textBlock.children('.receipt-main');
-            this.setAmountHTML(Math.floor(sum), $main);
+            this.setAmountHTML(Receipt.roundValue(sum, roundMode), $main);
         }
         static initByTaxRateMap(map) {
             Receipt.taxRates.forEach(rate => {
@@ -151,6 +172,21 @@ let Receipt = /** @class */ (() => {
             });
             return map;
         }
+        static roundValue(number, mode) {
+            let result;
+            switch (mode) {
+                case RoundMode.RoundOff:
+                    result = Math.round(number);
+                    break;
+                case RoundMode.RoundDown:
+                    result = Math.floor(number);
+                    break;
+                case RoundMode.RoundUp:
+                    result = Math.ceil(number);
+                    break;
+            }
+            return result;
+        }
     }
     Receipt.taxRates = [10, 8, 0];
     return Receipt;
@@ -161,7 +197,6 @@ class Item {
         this.$jQuery = $item.first();
         if (Item.$template === undefined) {
             Item.$template = this.$jQuery.clone();
-            console.debug(Item.$template);
         }
         this.$index = this.$jQuery.find('.index');
         this.$name = this.$jQuery.find("input[name='name']");
@@ -183,6 +218,7 @@ class Item {
     }
     update() {
         this.input();
+        this.calcAmount();
         this.setHTMLValue();
         this.receipt.update();
     }
@@ -194,7 +230,6 @@ class Item {
         this.quantity = Receipt.parseNumber(this.$quantity.val());
         this.unitPrice = Receipt.parseNumber(this.$unitPrice.val());
         this.taxRate = Number(this.$taxRate.val());
-        this.calcAmount();
     }
     setHTMLValue() {
         this.$index.text(this.index);
@@ -239,3 +274,9 @@ class Item {
         return this.taxRate;
     }
 }
+var RoundMode;
+(function (RoundMode) {
+    RoundMode[RoundMode["RoundOff"] = 0] = "RoundOff";
+    RoundMode[RoundMode["RoundDown"] = 1] = "RoundDown";
+    RoundMode[RoundMode["RoundUp"] = 2] = "RoundUp";
+})(RoundMode || (RoundMode = {}));
