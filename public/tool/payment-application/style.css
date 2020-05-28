@@ -1,7 +1,13 @@
 /** Effective Block **/
-
+.receipt-main {
+    font-size: large;
+}
 
 /** Fixed Block **/
 #top-wrapper {
     padding-top: 20px;
+}
+
+.receipt-section-total p {
+    margin-bottom: 0;
 }

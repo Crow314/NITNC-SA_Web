@@ -4,11 +4,14 @@ $( () => {
 });
 
 class Receipt {
-    static $template: JQuery;
+    static readonly taxRates: Array<number> = [10, 8, 0];
+    static readonly $template: JQuery = $('.receipt').first().clone();
 
     readonly $jQuery: JQuery;
     readonly $receiptDetails: JQuery;
     readonly $receiptTotal: JQuery;
+    readonly $receiptSubtotal: JQuery;
+    readonly $receiptTaxAdded: JQuery;
 
     private payee: string;
     private about: string;
@@ -22,20 +25,19 @@ class Receipt {
 
     constructor($receipt: JQuery) {
         this.$jQuery = $receipt.first();
-        if(Receipt.$template === undefined) {
-            Receipt.$template = this.$jQuery.clone();
-        }
 
         this.$receiptDetails = $receipt.find('.receipt-details');
         this.$receiptTotal = $receipt.find('.receipt-total');
+        this.$receiptSubtotal = $receipt.find('.receipt-subtotal');
+        this.$receiptTaxAdded = $receipt.find('.receipt-tax-added');
 
         this.payee = '';
         this.about = '';
         this.subtotal = 0;
         this.taxAmount = 0;
         this.totalAmount = 0;
-        this.subtotalByTaxRate = new Map<number, number>();
-        this.taxAmountByRate = new Map<number, number>();
+        this.subtotalByTaxRate = Receipt.initByTaxRateMap(new Map<number, number>());
+        this.taxAmountByRate = Receipt.initByTaxRateMap(new Map<number, number>());
 
         const $item = this.$receiptDetails.find('.receipt-item');
         const item: Item = new Item(this, $item, 1);
@@ -74,18 +76,13 @@ class Receipt {
         //reset
         this.subtotal = 0;
         this.taxAmount = 0;
-        this.subtotalByTaxRate = new Map<number, number>();
-        this.taxAmountByRate = new Map<number, number>();
+        Receipt.resetMapValue(this.subtotalByTaxRate);
+        Receipt.resetMapValue(this.taxAmountByRate);
 
         this.items.forEach(item => {
             const amount:number = item.getAmount();
             const taxRate:number = item.getTaxRate();
             const tax: number = amount * taxRate * 0.01;
-
-            if(!this.subtotalByTaxRate.has(taxRate)) { // 同一税率初出時
-                this.subtotalByTaxRate.set(taxRate, 0);
-                this.taxAmountByRate.set(taxRate, 0);
-            }
 
             this.subtotalByTaxRate.set(taxRate, Receipt.parseNumber(this.subtotalByTaxRate.get(taxRate)) + amount); // +=的な
             this.taxAmountByRate.set(taxRate, Receipt.parseNumber(this.taxAmountByRate.get(taxRate)) + tax); // +=的な
@@ -95,7 +92,7 @@ class Receipt {
         let tax: number = 0;
 
         this.subtotalByTaxRate.forEach((amount: number) => { // value, key
-            subtotal += Math.floor(amount);
+            subtotal += amount;
         });
         this.taxAmountByRate.forEach((amount: number) => {
             tax += Math.floor(amount);
@@ -108,6 +105,9 @@ class Receipt {
 
     setHTMLValue(): void {
         Receipt.setAmountHTML(this.totalAmount, this.$receiptTotal);
+
+        Receipt.setByTaxAmountHTML(this.subtotalByTaxRate, this.$receiptSubtotal);
+        Receipt.setByTaxAmountHTML(this.taxAmountByRate, this.$receiptTaxAdded);
     }
 
     getItemIndex(item: Item): number {
@@ -139,14 +139,14 @@ class Receipt {
         return Number(String(number).replace(/-/g, ''));
     }
 
-    static setAmountHTML(price: number, $textBlock: JQuery): void {
+    static setAmountHTML(amount: number, $textBlock: JQuery): void {
         const $amountText = $textBlock.find('.text-amount');
         const $amount = $amountText.children('.amount');
         const $minus = $amountText.children('.minus');
 
-        if(price >= 0) { // 正数時
+        if(amount >= 0) { // 正数時
             // テキスト設定
-            $amount.text(Receipt.thousandSeparate(price));
+            $amount.text(Receipt.thousandSeparate(amount));
 
             // マイナス表示削除
             if(!$minus.hasClass('d-none')) {
@@ -159,7 +159,7 @@ class Receipt {
             }
         }else { // 負数時
             // テキスト設定
-            $amount.text(Receipt.thousandSeparate(Receipt.removeMinus(price)));
+            $amount.text(Receipt.thousandSeparate(Receipt.removeMinus(amount)));
 
             // マイナス表示付加
             if($minus.hasClass('d-none')) {
@@ -172,10 +172,35 @@ class Receipt {
             }
         }
     }
+
+    static setByTaxAmountHTML(amountMap: Map<number, number>, $textBlock: JQuery): void {
+        let sum: number = 0;
+        amountMap.forEach((amount: number, taxRate: number) => {
+            const $target: JQuery = $textBlock.children('.receipt-tax' + String(taxRate));
+            Receipt.setAmountHTML(Math.floor(amount), $target);
+            sum += amount;
+        });
+        const $main: JQuery = $textBlock.children('.receipt-main');
+        this.setAmountHTML(Math.floor(sum), $main);
+    }
+
+    static initByTaxRateMap(map: Map<number, number>): Map<number, number> {
+        Receipt.taxRates.forEach(rate => {
+            map.set(rate, 0);
+        });
+        return map;
+    }
+    
+    static resetMapValue(map: Map<any, number>): Map<any, number> {
+        map.forEach((value: number, key: any) => {
+            map.set(key, 0);
+        });
+        return map;
+    }
 }
 
 class Item {
-    private static $template: JQuery;
+    static readonly $template: JQuery = $('.receipt-item').first().clone();
 
     readonly $jQuery: JQuery;
     readonly $index: JQuery;
@@ -198,9 +223,6 @@ class Item {
         this.receipt = receipt;
 
         this.$jQuery = $item.first();
-        if(Item.$template === undefined) {
-            Item.$template = this.$jQuery.clone();
-        }
 
         this.$index = this.$jQuery.find('.index');
         this.$name = this.$jQuery.find("input[name='name']");
