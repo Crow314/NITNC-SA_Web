@@ -57,6 +57,9 @@
                     <div class="receipt-property">
                         <p><label>支払先 <input class="form-control" type="text" name="payee"></label></p>
                         <p><label>但し書 <input class="form-control" type="text" name="about"></label></p>
+                        <p><label>内税/外税 <select class="form-control" name="tax_mode">
+                            <option value="included">内税</option><option value="added">外税</option>
+                        </select></label></p>
                         <p><label>消費税端数処理方法 <select class="form-control" name="round_mode">
                             <option value="round_down">切り捨て</option><option value="round_off">四捨五入</option><option value="round_up">切り上げ</option>
                         </select></label></p>
@@ -114,7 +117,7 @@
                                 (非課税対象: <span class="text-amount"><span class="minus hide">△</span>&yen;<span class="amount">0</span>-</span>)
                             </p>
                         </div>
-                        <div class="receipt-tax-added border-bottom">
+                        <div class="receipt-tax-added border-bottom hide">
                             <p class="receipt-main">
                                 消費税(外税): <span class="text-amount"><span class="minus hide">△</span>&yen;<span class="amount">0</span>-</span>
                             </p>
@@ -125,7 +128,7 @@
                                 (8%対象: <span class="text-amount"><span class="minus hide">△</span>&yen;<span class="amount">0</span>-</span>)
                             </p>
                         </div>
-                        <div class="receipt-tax-included border-bottom d-none">
+                        <div class="receipt-tax-included border-bottom">
                             <p class="receipt-main">
                                 消費税(内税): <span class="text-amount"><span class="minus hide">△</span>&yen;<span class="amount">0</span>-</span>
                             </p>

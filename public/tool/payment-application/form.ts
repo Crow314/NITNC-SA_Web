@@ -16,6 +16,7 @@ class Receipt {
     private payee: string;
     private about: string;
     private roundMode: RoundMode;
+    private taxMode: TaxMode;
     private subtotal: number;
     private taxAmount: number;
     private totalAmount: number;
@@ -38,6 +39,7 @@ class Receipt {
         this.payee = '';
         this.about = '';
         this.roundMode = RoundMode.RoundOff;
+        this.taxMode = TaxMode.Included;
         this.subtotal = 0;
         this.taxAmount = 0;
         this.totalAmount = 0;
@@ -61,6 +63,7 @@ class Receipt {
     input(): void {
         this.payee = String(this.$jQuery.find("input[name='payee']").val());
         this.about = String(this.$jQuery.find("input[name='about']").val());
+
         const roundModeStr: string = String(this.$jQuery.find("select[name='round_mode']").val());
         let roundMode: RoundMode = RoundMode.RoundDown;
         switch(roundModeStr) {
@@ -77,6 +80,19 @@ class Receipt {
                 break;
         }
         this.roundMode = roundMode;
+
+        const taxModeStr: string = String(this.$jQuery.find("select[name='tax_mode']").val());
+        let taxMode: TaxMode = TaxMode.Included;
+        switch(taxModeStr) {
+            case 'included':
+                taxMode = TaxMode.Included;
+                break;
+
+            case 'added':
+                taxMode = TaxMode.Added;
+                break
+        }
+        this.taxMode = taxMode;
     }
 
     updateItemIndex(): void {
@@ -108,9 +124,19 @@ class Receipt {
         Receipt.resetMapValue(this.taxAmountByRate);
 
         this.items.forEach(item => {
-            const amount:number = item.getAmount();
-            const taxRate:number = item.getTaxRate();
-            const tax: number = amount * taxRate * 0.01;
+            const amount: number = item.getAmount();
+            const taxRate: number = item.getTaxRate();
+            let tax: number = 0;
+
+            switch(this.taxMode) {
+                case TaxMode.Included:
+                    tax = amount - (amount / (taxRate*0.01 + 1));
+                    break;
+
+                case TaxMode.Added:
+                    tax = amount * (taxRate * 0.01);
+                    break;
+            }
 
             this.subtotalByTaxRate.set(taxRate, Receipt.parseNumber(this.subtotalByTaxRate.get(taxRate)) + amount); // +=的な
             this.taxAmountByRate.set(taxRate, Receipt.parseNumber(this.taxAmountByRate.get(taxRate)) + tax); // +=的な
@@ -125,17 +151,39 @@ class Receipt {
         this.taxAmountByRate.forEach((amount: number) => {
             tax += Receipt.roundValue(amount, this.roundMode);
         });
+
+        let totalAmount: number = subtotal;
+        if(this.taxMode === TaxMode.Added) {
+            totalAmount += tax;
+        }
+
         this.subtotal = subtotal;
         this.taxAmount = tax;
-
-        this.totalAmount = this.subtotal + this.taxAmount;
+        this.totalAmount = totalAmount;
     }
 
     setHTMLValue(): void {
-        Receipt.setAmountHTML(this.totalAmount, this.$receiptTotal);
+        const $taxIncluded: JQuery = this.$jQuery.find('.receipt-tax-included');
+        const $taxAdded: JQuery = this.$jQuery.find('.receipt-tax-added');
+        switch(this.taxMode) {
+            case TaxMode.Included:
+                Receipt.setByTaxAmountHTML(this.taxAmountByRate, $taxIncluded, this.roundMode);
+
+                $taxIncluded.show();
+                $taxAdded.hide();
+                break;
+
+            case TaxMode.Added:
+                Receipt.setByTaxAmountHTML(this.taxAmountByRate, $taxAdded, this.roundMode);
+
+                $taxAdded.show();
+                $taxIncluded.hide();
+                break;
+        }
+
 
         Receipt.setByTaxAmountHTML(this.subtotalByTaxRate, this.$receiptSubtotal, this.roundMode);
-        Receipt.setByTaxAmountHTML(this.taxAmountByRate, this.$receiptTaxAdded, this.roundMode);
+        Receipt.setAmountHTML(this.totalAmount, this.$receiptTotal);
     }
 
     getItemIndex(item: Item): number {
@@ -366,4 +414,9 @@ enum RoundMode {
     RoundOff,
     RoundDown,
     RoundUp
+}
+
+enum TaxMode {
+    Included,
+    Added
 }

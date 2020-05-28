@@ -17,6 +17,7 @@ let Receipt = /** @class */ (() => {
             this.payee = '';
             this.about = '';
             this.roundMode = RoundMode.RoundOff;
+            this.taxMode = TaxMode.Included;
             this.subtotal = 0;
             this.taxAmount = 0;
             this.totalAmount = 0;
@@ -50,6 +51,17 @@ let Receipt = /** @class */ (() => {
                     break;
             }
             this.roundMode = roundMode;
+            const taxModeStr = String(this.$jQuery.find("select[name='tax_mode']").val());
+            let taxMode = TaxMode.Included;
+            switch (taxModeStr) {
+                case 'included':
+                    taxMode = TaxMode.Included;
+                    break;
+                case 'added':
+                    taxMode = TaxMode.Added;
+                    break;
+            }
+            this.taxMode = taxMode;
         }
         updateItemIndex() {
             this.items.forEach(item => item.updateIndex());
@@ -78,7 +90,15 @@ let Receipt = /** @class */ (() => {
             this.items.forEach(item => {
                 const amount = item.getAmount();
                 const taxRate = item.getTaxRate();
-                const tax = amount * taxRate * 0.01;
+                let tax = 0;
+                switch (this.taxMode) {
+                    case TaxMode.Included:
+                        tax = amount - (amount / (taxRate * 0.01 + 1));
+                        break;
+                    case TaxMode.Added:
+                        tax = amount * (taxRate * 0.01);
+                        break;
+                }
                 this.subtotalByTaxRate.set(taxRate, Receipt.parseNumber(this.subtotalByTaxRate.get(taxRate)) + amount); // +=的な
                 this.taxAmountByRate.set(taxRate, Receipt.parseNumber(this.taxAmountByRate.get(taxRate)) + tax); // +=的な
             });
@@ -90,14 +110,31 @@ let Receipt = /** @class */ (() => {
             this.taxAmountByRate.forEach((amount) => {
                 tax += Receipt.roundValue(amount, this.roundMode);
             });
+            let totalAmount = subtotal;
+            if (this.taxMode === TaxMode.Added) {
+                totalAmount += tax;
+            }
             this.subtotal = subtotal;
             this.taxAmount = tax;
-            this.totalAmount = this.subtotal + this.taxAmount;
+            this.totalAmount = totalAmount;
         }
         setHTMLValue() {
-            Receipt.setAmountHTML(this.totalAmount, this.$receiptTotal);
+            const $taxIncluded = this.$jQuery.find('.receipt-tax-included');
+            const $taxAdded = this.$jQuery.find('.receipt-tax-added');
+            switch (this.taxMode) {
+                case TaxMode.Included:
+                    Receipt.setByTaxAmountHTML(this.taxAmountByRate, $taxIncluded, this.roundMode);
+                    $taxIncluded.show();
+                    $taxAdded.hide();
+                    break;
+                case TaxMode.Added:
+                    Receipt.setByTaxAmountHTML(this.taxAmountByRate, $taxAdded, this.roundMode);
+                    $taxAdded.show();
+                    $taxIncluded.hide();
+                    break;
+            }
             Receipt.setByTaxAmountHTML(this.subtotalByTaxRate, this.$receiptSubtotal, this.roundMode);
-            Receipt.setByTaxAmountHTML(this.taxAmountByRate, this.$receiptTaxAdded, this.roundMode);
+            Receipt.setAmountHTML(this.totalAmount, this.$receiptTotal);
         }
         getItemIndex(item) {
             return this.items.indexOf(item) + 1;
@@ -280,3 +317,8 @@ var RoundMode;
     RoundMode[RoundMode["RoundDown"] = 1] = "RoundDown";
     RoundMode[RoundMode["RoundUp"] = 2] = "RoundUp";
 })(RoundMode || (RoundMode = {}));
+var TaxMode;
+(function (TaxMode) {
+    TaxMode[TaxMode["Included"] = 0] = "Included";
+    TaxMode[TaxMode["Added"] = 1] = "Added";
+})(TaxMode || (TaxMode = {}));
