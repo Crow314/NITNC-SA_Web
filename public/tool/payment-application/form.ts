@@ -8,10 +8,6 @@ class Receipt {
     private static $template: JQuery;
 
     readonly $jQuery: JQuery;
-    readonly $receiptDetails: JQuery;
-    readonly $receiptTotal: JQuery;
-    readonly $receiptSubtotal: JQuery;
-    readonly $receiptTaxAdded: JQuery;
 
     private payee: string;
     private about: string;
@@ -31,11 +27,6 @@ class Receipt {
             Receipt.$template = this.$jQuery.clone();
         }
 
-        this.$receiptDetails = $receipt.find('.receipt-details');
-        this.$receiptTotal = $receipt.find('.receipt-total');
-        this.$receiptSubtotal = $receipt.find('.receipt-subtotal');
-        this.$receiptTaxAdded = $receipt.find('.receipt-tax-added');
-
         this.payee = '';
         this.about = '';
         this.roundMode = RoundMode.RoundOff;
@@ -45,10 +36,9 @@ class Receipt {
         this.totalAmount = 0;
         this.subtotalByTaxRate = Receipt.initByTaxRateMap(new Map<number, number>());
         this.taxAmountByRate = Receipt.initByTaxRateMap(new Map<number, number>());
+        this.items = [];
 
-        const $item = this.$receiptDetails.find('.receipt-item');
-        const item: Item = new Item(this, $item, 1);
-        this.items = [item];
+        this.addItem();
 
         this.$jQuery.on('click', '.add-item', this.addItem.bind(this));
         this.$jQuery.children('.receipt-property').on('change', 'input,select', this.update.bind(this));
@@ -101,9 +91,18 @@ class Receipt {
     }
 
     addItem(): void {
-        const $item = Item.getTemplate();
-        const item: Item = new Item(this, $item);
-        this.$receiptDetails.append($item);
+        const $receiptDetails = this.$jQuery.find('.receipt-details');
+        let $item: JQuery;
+        let item: Item;
+
+        if(this.items.length === 0) {
+            $item = $receiptDetails.find('.receipt-item');
+            item = new Item(this, $item, 1);
+        }else {
+            $item = Item.getTemplate();
+            item = new Item(this, $item);
+            $receiptDetails.append($item);
+        }
         this.items.push(item);
         this.updateItemIndex();
     }
@@ -163,6 +162,8 @@ class Receipt {
     }
 
     setHTMLValue(): void {
+        const $receiptTotal: JQuery = this.$jQuery.find('.receipt-total');
+        const $receiptSubtotal: JQuery = this.$jQuery.find('.receipt-subtotal');
         const $taxIncluded: JQuery = this.$jQuery.find('.receipt-tax-included');
         const $taxAdded: JQuery = this.$jQuery.find('.receipt-tax-added');
         switch(this.taxMode) {
@@ -182,8 +183,8 @@ class Receipt {
         }
 
 
-        Receipt.setByTaxAmountHTML(this.subtotalByTaxRate, this.$receiptSubtotal, this.roundMode);
-        Receipt.setAmountHTML(this.totalAmount, this.$receiptTotal);
+        Receipt.setByTaxAmountHTML(this.subtotalByTaxRate, $receiptSubtotal, this.roundMode);
+        Receipt.setAmountHTML(this.totalAmount, $receiptTotal);
     }
 
     getItemIndex(item: Item): number {
@@ -296,13 +297,6 @@ class Item {
     private static $template: JQuery;
 
     readonly $jQuery: JQuery;
-    readonly $index: JQuery;
-    readonly $name: JQuery;
-    readonly $quantity: JQuery;
-    readonly $unitPrice: JQuery;
-    readonly $amount: JQuery;
-    readonly $taxRate: JQuery;
-    readonly $removeButton: JQuery;
 
     private receipt: Receipt;
     private index: number;
@@ -320,14 +314,6 @@ class Item {
             Item.$template = this.$jQuery.clone();
         }
 
-        this.$index = this.$jQuery.find('.index');
-        this.$name = this.$jQuery.find("input[name='name']");
-        this.$quantity = this.$jQuery.find("input[name='quantity']");
-        this.$unitPrice = this.$jQuery.find("input[name='unit_price']");
-        this.$amount = this.$jQuery.find('.amount');
-        this.$taxRate = this.$jQuery.find("select[name='tax_rate']");
-        this.$removeButton = this.$jQuery.find(".remove-item");
-
         this.index = index;
         this.name = '';
         this.quantity = NaN;
@@ -338,8 +324,8 @@ class Item {
 
         this.setHTMLValue();
 
-        this.$jQuery.on('change', 'input,select', this.update.bind(this));
-        this.$removeButton.on('click', this.remove.bind(this));
+        this.$jQuery.find('input,select').on('change', this.update.bind(this));
+        this.$jQuery.find('.remove-item').on('click', this.remove.bind(this));
     }
 
     update(): void {
@@ -354,14 +340,21 @@ class Item {
     }
 
     input(): void {
-        this.name = String(this.$name.val());
-        this.quantity = Receipt.parseNumber(this.$quantity.val());
-        this.unitPrice = Receipt.parseNumber(this.$unitPrice.val());
-        this.taxRate = Number(this.$taxRate.val());
+        const $name = this.$jQuery.find("input[name='name']");
+        const $quantity = this.$jQuery.find("input[name='quantity']");
+        const $unitPrice = this.$jQuery.find("input[name='unit_price']");
+        const $taxRate = this.$jQuery.find("select[name='tax_rate']");
+
+        this.name = String($name.val());
+        this.quantity = Receipt.parseNumber($quantity.val());
+        this.unitPrice = Receipt.parseNumber($unitPrice.val());
+        this.taxRate = Number($taxRate.val());
     }
 
     setHTMLValue(): void {
-        this.$index.text(this.index);
+        const $index: JQuery = this.$jQuery.find('.index');
+
+        $index.text(this.index);
         this.checkUnitPriceColor();
         Receipt.setAmountHTML(this.amount, this.$jQuery);
     }
@@ -372,15 +365,17 @@ class Item {
     }
 
     checkUnitPriceColor(): void {
+        const $unitPrice = this.$jQuery.find("input[name='unit_price']");
+
         if(this.unitPrice >= 0) { // 正数時
             // 黒字に変更
-            if(this.$unitPrice.hasClass('text-danger')) {
-                this.$unitPrice.removeClass('text-danger');
+            if($unitPrice.hasClass('text-danger')) {
+                $unitPrice.removeClass('text-danger');
             }
         }else { // 負数時
             // 赤字に変更
-            if(!this.$unitPrice.hasClass('text-danger')) {
-                this.$unitPrice.addClass('text-danger');
+            if(!$unitPrice.hasClass('text-danger')) {
+                $unitPrice.addClass('text-danger');
             }
         }
     }

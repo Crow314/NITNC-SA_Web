@@ -10,10 +10,6 @@ let Receipt = /** @class */ (() => {
             if (Receipt.$template === undefined) {
                 Receipt.$template = this.$jQuery.clone();
             }
-            this.$receiptDetails = $receipt.find('.receipt-details');
-            this.$receiptTotal = $receipt.find('.receipt-total');
-            this.$receiptSubtotal = $receipt.find('.receipt-subtotal');
-            this.$receiptTaxAdded = $receipt.find('.receipt-tax-added');
             this.payee = '';
             this.about = '';
             this.roundMode = RoundMode.RoundOff;
@@ -23,9 +19,8 @@ let Receipt = /** @class */ (() => {
             this.totalAmount = 0;
             this.subtotalByTaxRate = Receipt.initByTaxRateMap(new Map());
             this.taxAmountByRate = Receipt.initByTaxRateMap(new Map());
-            const $item = this.$receiptDetails.find('.receipt-item');
-            const item = new Item(this, $item, 1);
-            this.items = [item];
+            this.items = [];
+            this.addItem();
             this.$jQuery.on('click', '.add-item', this.addItem.bind(this));
             this.$jQuery.children('.receipt-property').on('change', 'input,select', this.update.bind(this));
         }
@@ -68,9 +63,18 @@ let Receipt = /** @class */ (() => {
             this.update();
         }
         addItem() {
-            const $item = Item.getTemplate();
-            const item = new Item(this, $item);
-            this.$receiptDetails.append($item);
+            const $receiptDetails = this.$jQuery.find('.receipt-details');
+            let $item;
+            let item;
+            if (this.items.length === 0) {
+                $item = $receiptDetails.find('.receipt-item');
+                item = new Item(this, $item, 1);
+            }
+            else {
+                $item = Item.getTemplate();
+                item = new Item(this, $item);
+                $receiptDetails.append($item);
+            }
             this.items.push(item);
             this.updateItemIndex();
         }
@@ -119,6 +123,8 @@ let Receipt = /** @class */ (() => {
             this.totalAmount = totalAmount;
         }
         setHTMLValue() {
+            const $receiptTotal = this.$jQuery.find('.receipt-total');
+            const $receiptSubtotal = this.$jQuery.find('.receipt-subtotal');
             const $taxIncluded = this.$jQuery.find('.receipt-tax-included');
             const $taxAdded = this.$jQuery.find('.receipt-tax-added');
             switch (this.taxMode) {
@@ -133,8 +139,8 @@ let Receipt = /** @class */ (() => {
                     $taxIncluded.hide();
                     break;
             }
-            Receipt.setByTaxAmountHTML(this.subtotalByTaxRate, this.$receiptSubtotal, this.roundMode);
-            Receipt.setAmountHTML(this.totalAmount, this.$receiptTotal);
+            Receipt.setByTaxAmountHTML(this.subtotalByTaxRate, $receiptSubtotal, this.roundMode);
+            Receipt.setAmountHTML(this.totalAmount, $receiptTotal);
         }
         getItemIndex(item) {
             return this.items.indexOf(item) + 1;
@@ -235,13 +241,6 @@ class Item {
         if (Item.$template === undefined) {
             Item.$template = this.$jQuery.clone();
         }
-        this.$index = this.$jQuery.find('.index');
-        this.$name = this.$jQuery.find("input[name='name']");
-        this.$quantity = this.$jQuery.find("input[name='quantity']");
-        this.$unitPrice = this.$jQuery.find("input[name='unit_price']");
-        this.$amount = this.$jQuery.find('.amount');
-        this.$taxRate = this.$jQuery.find("select[name='tax_rate']");
-        this.$removeButton = this.$jQuery.find(".remove-item");
         this.index = index;
         this.name = '';
         this.quantity = NaN;
@@ -250,8 +249,8 @@ class Item {
         this.calcAmount();
         this.taxRate = 10;
         this.setHTMLValue();
-        this.$jQuery.on('change', 'input,select', this.update.bind(this));
-        this.$removeButton.on('click', this.remove.bind(this));
+        this.$jQuery.find('input,select').on('change', this.update.bind(this));
+        this.$jQuery.find('.remove-item').on('click', this.remove.bind(this));
     }
     update() {
         this.input();
@@ -263,13 +262,18 @@ class Item {
         this.receipt.removeItem(this);
     }
     input() {
-        this.name = String(this.$name.val());
-        this.quantity = Receipt.parseNumber(this.$quantity.val());
-        this.unitPrice = Receipt.parseNumber(this.$unitPrice.val());
-        this.taxRate = Number(this.$taxRate.val());
+        const $name = this.$jQuery.find("input[name='name']");
+        const $quantity = this.$jQuery.find("input[name='quantity']");
+        const $unitPrice = this.$jQuery.find("input[name='unit_price']");
+        const $taxRate = this.$jQuery.find("select[name='tax_rate']");
+        this.name = String($name.val());
+        this.quantity = Receipt.parseNumber($quantity.val());
+        this.unitPrice = Receipt.parseNumber($unitPrice.val());
+        this.taxRate = Number($taxRate.val());
     }
     setHTMLValue() {
-        this.$index.text(this.index);
+        const $index = this.$jQuery.find('.index');
+        $index.text(this.index);
         this.checkUnitPriceColor();
         Receipt.setAmountHTML(this.amount, this.$jQuery);
     }
@@ -278,16 +282,17 @@ class Item {
         this.setHTMLValue();
     }
     checkUnitPriceColor() {
+        const $unitPrice = this.$jQuery.find("input[name='unit_price']");
         if (this.unitPrice >= 0) { // 正数時
             // 黒字に変更
-            if (this.$unitPrice.hasClass('text-danger')) {
-                this.$unitPrice.removeClass('text-danger');
+            if ($unitPrice.hasClass('text-danger')) {
+                $unitPrice.removeClass('text-danger');
             }
         }
         else { // 負数時
             // 赤字に変更
-            if (!this.$unitPrice.hasClass('text-danger')) {
-                this.$unitPrice.addClass('text-danger');
+            if (!$unitPrice.hasClass('text-danger')) {
+                $unitPrice.addClass('text-danger');
             }
         }
     }
