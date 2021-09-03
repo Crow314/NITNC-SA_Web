@@ -1,5 +1,6 @@
 <template>
   <v-app>
+    <TitleBar />
     <Nuxt />
   </v-app>
 </template>
