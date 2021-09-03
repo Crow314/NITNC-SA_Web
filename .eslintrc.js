@@ -3,6 +3,7 @@ module.exports = {
     '@nuxtjs/eslint-config-typescript'
   ],
   rules: {
-    'arrow-parens': ['error', 'as-needed']
+    'arrow-parens': ['error', 'as-needed'],
+    'vue/singleline-html-element-content-newline': ['off']
   }
 }
