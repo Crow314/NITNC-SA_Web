@@ -1,11 +1,29 @@
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/usage.statistics.xml
-.idea/deployment.xml
-.idea/webServers.xml
-.idea/dictionaries
-.idea/shelf
-.idea/libraries
-node_modules/
-out/
+# Dependencies
+node_modules
+
+# Only keep yarn.lock in the root
+package-lock.json
+
+# Logs
+*.log
+
+# Other
+.nuxt*
+!.nuxtignore
+!.nuxtrc
+.cache
+
+# Dist folders
+dist
+
+# VSCode
+.vscode
+
+# Intellij idea
+*.iml
+.idea
+
+# OSX
 .DS_Store
+.AppleDouble
+.LSOverride
