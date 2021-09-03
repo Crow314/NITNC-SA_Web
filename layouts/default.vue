@@ -1,10 +1,12 @@
 <template>
-  <h1>Hello World!</h1>
+  <v-app>
+    <Nuxt />
+  </v-app>
 </template>
 
 <script>
 export default {
-  name: 'Index'
+  name: 'Default'
 }
 </script>
 
