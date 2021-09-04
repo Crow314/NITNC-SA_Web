@@ -13,13 +13,12 @@
 </template>
 
 <script lang="ts">
-// import NuxtError from '@nuxt/types'
+import { NuxtError } from '@nuxt/types'
 
 export default {
   props: {
     error: {
-      // type: Object as () => NuxtError,
-      type: Object,
+      type: Object as () => NuxtError,
       default: null
     }
   }
