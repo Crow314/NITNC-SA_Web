@@ -26,6 +26,6 @@ export default class Navigation extends VuexModule {
 
   @Mutation
   toggleClip (): void {
-    this.clipped = !(this.isClipped)
+    this.clipped = !this.clipped
   }
 }

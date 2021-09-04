@@ -9,12 +9,10 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from '@nuxtjs/composition-api'
-// import { getModule } from 'vuex-module-decorators'
 import { navigationStore } from '@/store'
 
 export default defineComponent({
   setup () {
-    // const navigationInstance = getModule(navigationStore, this.$store)
     const navigationInstance = navigationStore
 
     const navigationClipped = ref(true)
