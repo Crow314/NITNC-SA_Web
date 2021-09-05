@@ -1,7 +1,7 @@
 <template>
   <div>
-    <v-app-bar app dark elevate-on-scroll :clipped-left="navigationClipped">
-      <v-app-bar-nav-icon @click="toggleNavigationClipped" />
+    <v-app-bar app dark elevate-on-scroll>
+      <v-app-bar-nav-icon @click="toggleDrawerState" />
       <v-toolbar-title>{{ title }}</v-toolbar-title>
     </v-app-bar>
   </div>
@@ -16,12 +16,8 @@ export default class TitleBar extends Vue {
   @Prop({ type: String, default: 'NITNC-SA' })
   title!: string;
 
-  get navigationClipped(): boolean {
-    return navigationStore.isClipped
-  }
-
-  public toggleNavigationClipped(): void {
-    navigationStore.toggleClip()
+  public toggleDrawerState(): void {
+    navigationStore.toggleDrawerState()
   }
 }
 </script>

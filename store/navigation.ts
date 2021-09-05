@@ -1,6 +1,8 @@
 import { Module, VuexModule, Mutation } from 'vuex-module-decorators'
+// eslint-disable-next-line import/named
+import { Location } from 'vue-router'
 
-interface NavigationItem {
+export interface NavigationItem {
   title: string;
   icon: string;
   href: Location | null;
@@ -13,19 +15,23 @@ interface NavigationItem {
 })
 
 export default class Navigation extends VuexModule {
-  private clipped: boolean = true
-  private navigationItems: NavigationItem[] = []
+  readonly navigationItems: NavigationItem[] = [
+    { title: 'Home', icon: 'mdi-view-dashboard', href: { path: '/' } }
+  ]
 
-  public get isClipped(): boolean {
-    return this.clipped
-  }
+  private drawerState: boolean = false
 
-  get getNavigationItems(): NavigationItem[] {
-    return this.navigationItems
+  public get isDrawerOpen(): boolean {
+    return this.drawerState
   }
 
   @Mutation
-  toggleClip(): void {
-    this.clipped = !this.clipped
+  setDrawerState(state: boolean): void {
+    this.drawerState = state
+  }
+
+  @Mutation
+  toggleDrawerState(): void {
+    this.drawerState = !this.drawerState
   }
 }
