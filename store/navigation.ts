@@ -16,16 +16,16 @@ export default class Navigation extends VuexModule {
   private clipped: boolean = true
   private navigationItems: NavigationItem[] = []
 
-  public get isClipped (): boolean {
+  public get isClipped(): boolean {
     return this.clipped
   }
 
-  get getNavigationItems (): NavigationItem[] {
+  get getNavigationItems(): NavigationItem[] {
     return this.navigationItems
   }
 
   @Mutation
-  toggleClip (): void {
+  toggleClip(): void {
     this.clipped = !this.clipped
   }
 }

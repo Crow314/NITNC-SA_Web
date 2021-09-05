@@ -12,7 +12,7 @@ import { defineComponent, onMounted, ref } from '@nuxtjs/composition-api'
 import { navigationStore } from '@/store'
 
 export default defineComponent({
-  setup () {
+  setup() {
     const navigationInstance = navigationStore
 
     const navigationClipped = ref(true)

@@ -5,7 +5,7 @@ import navigation from '@/store/navigation'
 // eslint-disable-next-line import/no-mutable-exports
 let navigationStore: navigation
 
-function initialiseStores (store: Store<any>): void {
+function initialiseStores(store: Store<any>): void {
   navigationStore = getModule(navigation, store)
 }
 
