@@ -4,7 +4,6 @@ export default {
     '@nuxtjs/vuetify'
   ],
   buildModules: [
-    '@nuxtjs/composition-api/module',
     '@nuxtjs/eslint-module',
     '@nuxt/typescript-build'
   ],

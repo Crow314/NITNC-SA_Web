@@ -8,32 +8,19 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref } from '@nuxtjs/composition-api'
+import { Vue, Component } from 'nuxt-property-decorator'
 import { navigationStore } from '@/store'
 
-export default defineComponent({
-  setup() {
-    const navigationInstance = navigationStore
-
-    const navigationClipped = ref(true)
-    const isNavigationClipped = () => {
-      navigationClipped.value = navigationInstance.isClipped
-      return navigationClipped.value
-    }
-
-    const toggleNavigationClipped = () => {
-      navigationInstance.toggleClip()
-      isNavigationClipped()
-    }
-
-    onMounted(isNavigationClipped)
-
-    return {
-      navigationClipped,
-      toggleNavigationClipped
-    }
+@Component
+export default class TitleBar extends Vue {
+  get navigationClipped(): boolean {
+    return navigationStore.isClipped
   }
-})
+
+  public toggleNavigationClipped(): void {
+    navigationStore.toggleClip()
+  }
+}
 </script>
 
 <style scoped>
